@@ -21,6 +21,9 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
+scripts_path = os.getcwd() + '/scripts/'
+logs_path = os.getcwd() + '/logs/'
+
 
 # +--------------------------------------------------------------------
 # |   compare_signature
@@ -49,14 +52,10 @@ def run_shell(shell_name):
     if shell_name is "":
         return False
 
-    shell_path = './script/' + shell_name
-    log_path = './logs/' + shell_name + '.log'
+    shell_path = scripts_path + shell_name
+    log_path = logs_path + shell_name + '.log'
 
     if not os.path.exists(shell_path):
-        # 日志目录不存在则创建一个
-        if not os.path.exists('./logs'):
-            os.mkdir('./logs')
-
         log_file = open(log_path, 'a')
         log_file.writelines("脚本不存在，无法执行")
         return False
@@ -122,4 +121,11 @@ def add():
 
 
 if __name__ == '__main__':
+    # 脚本目录不存在则创建一个
+    if not os.path.exists(scripts_path):
+        os.mkdir(scripts_path)
+    # 日志目录不存在则创建一个
+    if not os.path.exists(logs_path):
+        os.mkdir(logs_path)
+
     app.run('0.0.0.0', port=8080, debug=True)

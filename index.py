@@ -50,6 +50,11 @@ def webhook(key):
     return "<p>Hello, webhook!</p> %s !" % key
 
 
+@app.get("/add")
+def add():
+    return "<p>Hello, add!</p> "
+
+
 if __name__ == '__main__':
     app.run()
 

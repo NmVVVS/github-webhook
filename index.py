@@ -46,10 +46,14 @@ def compare_signature(secretkey, data, signature):
 # |   @param shell_path string 脚本绝对路径
 # +--------------------------------------------------------------------
 def run_shell(shell_name):
+    if shell_name is "":
+        return False
+
     shell_path = './script/' + shell_name
     log_path = './logs/' + shell_name + '.log'
+
     if not os.path.exists(shell_path):
-        log_file = open(log_path, 'w')
+        log_file = open(log_path, 'a')
         log_file.writelines("脚本不存在，无法执行")
         return False
 

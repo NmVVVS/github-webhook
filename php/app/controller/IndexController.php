@@ -8,6 +8,11 @@ use support\Response;
 class IndexController {
 
     public function index(Request $request): Response {
+
+        exec(APPLICATION_PATH . "/aaa.sh");
+        return json([]);
+
+
         $parameter = $request->get();
         $data = $request->post();
 

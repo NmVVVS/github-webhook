@@ -34,9 +34,7 @@ app = Flask(__name__)
 def compare_signature(secretkey, data, signature):
     _key = secretkey.encode('utf-8')
     _data = data.encode('utf-8')
-    print("1." + signature)
     _signature = 'sha256=' + hmac.new(_key, _data, digestmod=sha256).hexdigest()
-    print("2." + signature)
     return _signature == signature
 
 
@@ -107,7 +105,9 @@ def webhook(key):
     if type(post_data) is bytes:
         post_data = post_data.decode()
 
-    if compare_signature(secret_key, post_data, github_signature):
+    # 判断签名是否正确
+    sign_result = compare_signature(secret_key, post_data, github_signature)
+    if not sign_result:
         return '滚!'
 
     if run_shell(shell):

@@ -14,12 +14,57 @@
 
 import json
 import os
+import hmac
+from hashlib import sha256
 
 from flask import Flask, request
 
 app = Flask(__name__)
 
 
+# +--------------------------------------------------------------------
+# |   compare_signature
+# |
+# |   github 签名校验方法
+# |
+# |   @param secretkey  string 密钥
+# |   @param data       string 要加密的数据
+# |   @param signature  string github 签名
+# +--------------------------------------------------------------------
+def compare_signature(secretkey, data, signature):
+    _key = secretkey.encode('utf-8')
+    _data = data.encode('utf-8')
+    _signature = 'sha256=' + hmac.new(_key, _data, digestmod=sha256).hexdigest()
+    return _signature == signature
+
+
+# +--------------------------------------------------------------------
+# |   run_shell
+# |
+# |   执行 linux 脚本
+# |
+# |   @param shell_path string 脚本绝对路径
+# +--------------------------------------------------------------------
+def run_shell(shell_name):
+    shell_path = './script/' + shell_name
+    log_path = './logs/' + shell_name + '.log'
+    if not os.path.exists(shell_path):
+        log_file = open(log_path, 'w')
+        log_file.writelines("脚本不存在，无法执行")
+        return False
+
+    os.system("/bin/bash {} >> {} &".format(shell_path, log_path))
+    return True
+
+
+# +--------------------------------------------------------------------
+# |   app.post("/<key>")
+# |
+# |   Hook 接收方法，github 请求方法，当github
+# |   发送 webhook 通知时候，执行当前方法
+# |
+# |   @param key string 脚本绝对路径
+# +--------------------------------------------------------------------
 @app.post("/<key>")
 def webhook(key):
     json_file = './list.json'
@@ -30,24 +75,32 @@ def webhook(key):
     with open(json_file, encoding='utf-8') as config:
         result = json.load(config)
 
+    # 检查 key 是否存在
     config_data = result.get(key)
     if config_data is None:
         return 'Key 不存在!'
 
+    # 检查 配置文件 中参数是否配置成功
     secret_key = config_data.get('secret')
     shell = config_data.get('shell')
     if secret_key is None or shell is None:
         return 'Key 配置错误!'
 
-    headers = request.headers
-    print(headers)
+    # 从 request 中获取原始数据
+    github_signature = request.headers.get("X-Hub-Signature-256")
     post_data = request.stream.read()
-    print(post_data)
 
-    # result = json.load(json_file)
-    # data = {}
-    # data = json.loads(readFile(jsonFile))
-    return "<p>Hello, webhook!</p> %s !" % key
+    # request body 可能是bytes 转化成 string
+    if type(post_data) is bytes:
+        post_data = post_data.decode()
+
+    if compare_signature(secret_key, post_data, github_signature):
+        return '滚!'
+
+    if run_shell(shell):
+        return 'Success'
+    else:
+        return 'Fail'
 
 
 @app.get("/add")
@@ -57,72 +110,3 @@ def add():
 
 if __name__ == '__main__':
     app.run('0.0.0.0', port=8080, debug=True)
-
-# import public,json,os,time
-# class obj: id=0
-# class webhook_main:
-#     __setupPath = 'plugin/webhook'
-#     __panelPath = '/www/server/panel'
-#
-#     #获取列表
-#     def GetList(self,get):
-#         jsonFile = self.__setupPath + '/list.json'
-#         if not os.path.exists(jsonFile): return public.returnMsg(False,'配置文件                                                       不存在!')
-#         data = {}
-#         data = json.loads(public.readFile(jsonFile))
-#         return sorted(data, key= lambda b:b['addtime'],reverse=True)
-#
-#     #添加HOOK
-#     def AddHook(self,get):
-#         data = self.GetList(get)
-#         if get.title == '' or get.shell == '': return public.returnMsg(False,'标                                                       题和Hook脚本不能为空')
-#         hook = {}
-#         hook['title'] = get.title
-#         hook['access_key'] = public.GetRandomString(48)
-#         hook['count'] = 0
-#         hook['addtime'] = int(time.time())
-#         hook['uptime'] = 0
-#         jsonFile = self.__setupPath + '/list.json'
-#         if self.__setupPath + '/script': os.system('mkdir ' + self.__setupPath +                                                        '/script')
-#         shellFile = self.__setupPath + '/script/' + hook['access_key']
-#         public.writeFile(shellFile,get.shell)
-#         data.append(hook)
-#         public.writeFile(jsonFile,json.dumps(data))
-#         return public.returnMsg(True,'添加成功!')
-#
-#     #删除Hook
-#     def DelHook(self,get):
-#         data = self.GetList(get)
-#         newdata = []
-#         for hook in data:
-#             if hook['access_key'] == get.access_key: continue
-#             newdata.append(hook)
-#         jsonFile = self.__setupPath + '/list.json'
-#         shellFile = self.__setupPath + '/script/' + get.access_key
-#         os.system('rm -f ' + shellFile + '*')
-#         public.writeFile(jsonFile,json.dumps(newdata))
-#         return public.returnMsg(True,'删除成功!')
-#
-#     #运行Shell
-#     def RunShell(self,get):
-#         data = self.GetList(get)
-#         for i in range(len(data)):
-#             if data[i]['access_key'] == get.access_key:
-#                 shellFile = self.__setupPath + '/script/' + get.access_key
-#                 param = ''
-#                 if hasattr(get,'param'): param = get.param
-#                 os.system("bash {} \"{}\" >> {}.log &".format(shellFile,param.re                                                       place('"',r'\"'),shellFile))
-#                 data[i]['count'] +=1
-#                 data[i]['uptime'] = int(time.time())
-#                 jsonFile = self.__setupPath + '/list.json'
-#                 public.writeFile(jsonFile,json.dumps(data))
-#                 return public.returnMsg(True,'运行成功!')
-#         return public.returnMsg(False,'指定Hook不存在!')
-#
-#     #运行Hook
-#     def RunHook(self,get):
-#         res = self.RunShell(get)
-#         result = {}
-#         result['code'] = 0
-#         if res['status']: result['code'] = 1
-#         return result

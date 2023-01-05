@@ -56,7 +56,7 @@ def add():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run('0.0.0.0')
 
 # import public,json,os,time
 # class obj: id=0

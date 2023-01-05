@@ -53,6 +53,10 @@ def run_shell(shell_name):
     log_path = './logs/' + shell_name + '.log'
 
     if not os.path.exists(shell_path):
+        # 日志目录不存在则创建一个
+        if not os.path.exists('./logs'):
+            os.mkdir('./logs')
+
         log_file = open(log_path, 'a')
         log_file.writelines("脚本不存在，无法执行")
         return False

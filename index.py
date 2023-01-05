@@ -34,7 +34,9 @@ app = Flask(__name__)
 def compare_signature(secretkey, data, signature):
     _key = secretkey.encode('utf-8')
     _data = data.encode('utf-8')
+    print("1." + signature)
     _signature = 'sha256=' + hmac.new(_key, _data, digestmod=sha256).hexdigest()
+    print("2." + signature)
     return _signature == signature
 
 
@@ -99,7 +101,6 @@ def webhook(key):
     if github_signature is None:
         return "走开！^-^"
 
-    print(github_signature)
     post_data = request.stream.read()
 
     # request body 可能是bytes 转化成 string

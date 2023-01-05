@@ -92,6 +92,7 @@ def webhook(key):
 
     # 从 request 中获取原始数据
     github_signature = request.headers.get("X-Hub-Signature-256")
+    print(github_signature)
     post_data = request.stream.read()
 
     # request body 可能是bytes 转化成 string

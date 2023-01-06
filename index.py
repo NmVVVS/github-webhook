@@ -128,4 +128,4 @@ if __name__ == '__main__':
     if not os.path.exists(logs_path):
         os.mkdir(logs_path)
 
-    app.run('0.0.0.0', port=8080, debug=True)
+    app.run('0.0.0.0', port=8080)

@@ -18,6 +18,7 @@ import hmac
 from hashlib import sha256
 
 from flask import Flask, request
+from gevent import pywsgi
 
 app = Flask(__name__)
 
@@ -124,8 +125,10 @@ if __name__ == '__main__':
     # 脚本目录不存在则创建一个
     if not os.path.exists(scripts_path):
         os.mkdir(scripts_path)
+
     # 日志目录不存在则创建一个
     if not os.path.exists(logs_path):
         os.mkdir(logs_path)
 
-    app.run('0.0.0.0', port=8080)
+    server = pywsgi.WSGIServer(('0.0.0.0', 8080), app)
+    server.serve_forever()

@@ -49,7 +49,7 @@ def compare_signature(secretkey, data, signature):
 # |   @param shell_path string 脚本绝对路径
 # +--------------------------------------------------------------------
 def run_shell(shell_name):
-    if shell_name is "":
+    if shell_name == "":
         return False
 
     shell_path = scripts_path + shell_name
@@ -60,7 +60,7 @@ def run_shell(shell_name):
         log_file.writelines("脚本不存在，无法执行")
         return False
 
-    os.system("/bin/bash {} >> {} &".format(shell_path, log_path))
+    os.system("/bin/bash " + shell_path + " >> " + log_path + " &")
     return True
 
 
